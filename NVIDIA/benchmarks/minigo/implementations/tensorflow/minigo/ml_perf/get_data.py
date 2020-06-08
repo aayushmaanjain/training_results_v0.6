@@ -20,13 +20,14 @@ sys.path.insert(0, '.')  # nopep8
 import asyncio
 import glob
 import os
+import shutil
 
 from absl import app, flags
 from ml_perf import utils
 
 N = os.environ.get('BOARD_SIZE', '19')
 
-flags.DEFINE_string('src_dir', 'gs://minigo-pub/ml_perf/',
+flags.DEFINE_string('src_dir', 'gs://minigo-pub/ml_perf/0.6/',
                     'Directory on GCS to copy source data from. Files will be '
                     'copied from subdirectories of src_dir corresponding to '
                     'the BOARD_SIZE environment variable (defaults to 19).')
@@ -52,10 +53,18 @@ def main(unused_argv):
   try:
     for d in ['checkpoint', 'target']:
       # Pull the required training checkpoints and models from GCS.
-      src = os.path.join(FLAGS.src_dir, d, N)
+      src = os.path.join(FLAGS.src_dir, d)
       dst = os.path.join(FLAGS.dst_dir, d)
       utils.ensure_dir_exists(dst)
       utils.wait(utils.checked_run(None, 'gsutil', '-m', 'cp', '-r', src, dst))
+      # hack to make new path work with old code
+      os.rename(os.path.join(dst, d), os.path.join(dst, N))
+
+    # hacks to make new path work with old code
+    ckp_dir = os.path.join(FLAGS.dst_dir, 'checkpoint', N)
+    os.rename(os.path.join(ckp_dir, 'work_dir'), os.path.join(ckp_dir, 'tmp'))
+    shutil.move(os.path.join(ckp_dir, 'tmp', 'work_dir'), ckp_dir)
+    os.rmdir(os.path.join(ckp_dir, 'tmp'))
 
     # Freeze the target model.
     freeze_graph(os.path.join(FLAGS.dst_dir, 'target', N, 'target'), 2048)
