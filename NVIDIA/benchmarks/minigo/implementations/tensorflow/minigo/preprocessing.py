@@ -124,7 +124,10 @@ def read_tf_records(batch_size, tf_records, num_repeats=1,
     #    random.shuffle(tf_records)
     record_list = tf.data.Dataset.from_tensor_slices(tf_records)
 
-    record_list = record_list.shard(hvd.size(), hvd.rank())
+    try:
+        record_list = record_list.shard(hvd.size(), hvd.rank())
+    except:
+        print("WARNING: horovod not initialized")
 
     # compression_type here must agree with write_tf_examples
     map_func = functools.partial(
@@ -179,7 +182,10 @@ def read_tf_records_new(batch_size, tf_records, num_repeats=1,
     #    random.shuffle(tf_records)
     record_list = tf.data.Dataset.from_tensor_slices(tf_records)
 
-    record_list = record_list.shard(hvd.size(), hvd.rank())
+    try:
+        record_list = record_list.shard(hvd.size(), hvd.rank())
+    except:
+        print("WARNING: horovod not initialized")
 
     # compression_type here must agree with write_tf_examples
     map_func = functools.partial(
