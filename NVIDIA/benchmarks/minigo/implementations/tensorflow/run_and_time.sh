@@ -62,7 +62,8 @@ echo "ENDING TIMING RUN AT $end_fmt"
 # run eval
 python ml_perf/eval_models.py \
   --base_dir=$BASE_DIR \
-  --flags_dir=ml_perf/flags/9/ ; ret_code=$?
+  --flags_dir=ml_perf/flags/9/ \
+  --flagfile=ml_perf/flags/9/rl_loop.flags ; ret_code=$?
 
 set +x
 
